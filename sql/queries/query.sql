@@ -5,7 +5,7 @@ SELECT * FROM categories;
 SELECT * FROM categories
 WHERE id = ?;
 
--- name: CreateCategory :exec
+-- name: CreateCategory :execresult
 INSERT INTO categories(id, name, description)
 VALUES (?,?,?);
 
