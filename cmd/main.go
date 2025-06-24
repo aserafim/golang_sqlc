@@ -7,7 +7,6 @@ import (
 
 	"github.com/aserafim/golang_sqlc/internal/db"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/google/uuid"
 )
 
 type CourseDB struct {
@@ -31,7 +30,7 @@ type CategoryParams struct {
 type CourseParams struct {
 	ID    string
 	Name  string
-	Price float32
+	Price float64
 }
 
 func (c *CourseDB) callTx(ctx context.Context, fn func(*db.Queries) error) error {
@@ -67,7 +66,7 @@ func (c *CourseDB) CreateCourseAndCategory(ctx context.Context, argsCategory Cat
 		err = q.CreateCourse(ctx, db.CreateCourseParams{
 			ID:         argsCourse.ID,
 			Name:       argsCourse.Name,
-			Price:      fmt.Sprintf("%f", argsCourse.Price),
+			Price:      argsCourse.Price,
 			CategoryID: argsCategory.ID,
 		})
 		if err != nil {
@@ -90,25 +89,35 @@ func main() {
 		panic(err)
 	}
 	defer conn.Close()
-	//queries := db.New(conn)
+	queries := db.New(conn)
 
-	courseArgs := CourseParams{
-		ID:    uuid.New().String(),
-		Name:  "Go",
-		Price: 127,
-	}
+	courses, err := queries.ListCourses(ctx)
 
-	categoryArgs := CategoryParams{
-		ID:          uuid.New().String(),
-		Name:        "Backend",
-		Description: sql.NullString{String: "Backend Course", Valid: true},
-	}
-
-	courseDB := NewCourseDB(conn)
-	err = courseDB.CreateCourseAndCategory(ctx, categoryArgs, courseArgs)
 	if err != nil {
 		panic(err)
 	}
+
+	for _, c := range courses {
+		fmt.Printf("Category: %s\nCourse ID: %s\nCourse name: %s\nCourse Price: %f\n\n", c.CategoryName, c.ID, c.Name, c.Price)
+	}
+
+	// courseArgs := CourseParams{
+	// 	ID:    uuid.New().String(),
+	// 	Name:  "Python to Data Science",
+	// 	Price: 685,
+	// }
+
+	// categoryArgs := CategoryParams{
+	// 	ID:          uuid.New().String(),
+	// 	Name:        "Data-science",
+	// 	Description: sql.NullString{String: "Data-science Course", Valid: true},
+	// }
+
+	// courseDB := NewCourseDB(conn)
+	// err = courseDB.CreateCourseAndCategory(ctx, categoryArgs, courseArgs)
+	// if err != nil {
+	// 	panic(err)
+	// }
 
 	// queries.CreateCategory(ctx, db.CreateCategoryParams{
 	// 	ID:          uuid.New().String(),

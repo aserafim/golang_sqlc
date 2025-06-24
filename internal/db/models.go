@@ -18,5 +18,5 @@ type Course struct {
 	ID         string
 	CategoryID string
 	Name       string
-	Price      string
+	Price      float64
 }
