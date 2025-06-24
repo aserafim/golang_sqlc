@@ -21,6 +21,18 @@ func NewCourseDB(dbConn *sql.DB) *CourseDB {
 	}
 }
 
+type CategoryParams struct {
+	ID          string
+	Name        string
+	Description sql.NullString
+}
+
+type CourseParams struct {
+	ID    string
+	Name  string
+	Price float32
+}
+
 func (c *CourseDB) callTx(ctx context.Context, fn func(*db.Queries) error) error {
 
 	tx, err := c.dbConn.BeginTx(ctx, nil)
@@ -37,6 +49,36 @@ func (c *CourseDB) callTx(ctx context.Context, fn func(*db.Queries) error) error
 		return err
 	}
 	return tx.Commit()
+}
+
+func (c *CourseDB) CreateCourseAndCategory(ctx context.Context, argsCategory CategoryParams, argsCourse CourseParams) error {
+	err := c.callTx(ctx, func(q *db.Queries) error {
+		var err error
+		_, err = q.CreateCategory(ctx, db.CreateCategoryParams{
+			ID:          argsCategory.ID,
+			Name:        argsCategory.Name,
+			Description: argsCategory.Description,
+		})
+		if err != nil {
+			return err
+		}
+
+		err = q.CreateCourse(ctx, db.CreateCourseParams{
+			ID:         argsCourse.ID,
+			Name:       argsCourse.Name,
+			Price:      fmt.Sprintf("%f", argsCourse.Price),
+			CategoryID: argsCategory.ID,
+		})
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
+	if err != nil {
+		return nil
+	}
+	return nil
 }
 
 func main() {
