@@ -9,6 +9,36 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+type CourseDB struct {
+	dbConn *sql.DB
+	*db.Queries
+}
+
+func NewCourseDB(dbConn *sql.DB) *CourseDB {
+	return &CourseDB{
+		dbConn:  dbConn,
+		Queries: db.New(dbConn),
+	}
+}
+
+func (c *CourseDB) callTx(ctx context.Context, fn func(*db.Queries) error) error {
+
+	tx, err := c.dbConn.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	q := db.New(tx)
+	err = fn(q)
+	if err != nil {
+		if errRb := tx.Rollback(); errRb != nil {
+			return fmt.Errorf("error on rollback: %v, original error: %w", errRb, err)
+		}
+		return err
+	}
+	return tx.Commit()
+}
+
 func main() {
 	ctx := context.Background()
 
@@ -62,12 +92,13 @@ func main() {
 	// }
 	// fmt.Printf("ID: %s\nName: %s\nDescription: %s\n", cat.ID, cat.Name, cat.Description.String)
 
-	categories, err := queries.ListCategories(ctx)
-	if err != nil {
-		panic(err)
-	}
+	// categories, err := queries.ListCategories(ctx)
+	// if err != nil {
+	// 	panic(err)
+	// }
 
-	for _, cat := range categories {
-		fmt.Printf("ID: %s\nName: %s\nDescription: %s\n\n", cat.ID, cat.Name, cat.Description.String)
-	}
+	// for _, cat := range categories {
+	// 	fmt.Printf("ID: %s\nName: %s\nDescription: %s\n\n", cat.ID, cat.Name, cat.Description.String)
+	// }
+
 }
