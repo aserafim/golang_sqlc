@@ -7,6 +7,7 @@ import (
 
 	"github.com/aserafim/golang_sqlc/internal/db"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/google/uuid"
 )
 
 type CourseDB struct {
@@ -89,7 +90,26 @@ func main() {
 		panic(err)
 	}
 	defer conn.Close()
-	queries := db.New(conn)
+	//queries := db.New(conn)
+
+	courseArgs := CourseParams{
+		ID:    uuid.New().String(),
+		Name:  "Go",
+		Price: 127,
+	}
+
+	categoryArgs := CategoryParams{
+		ID:          uuid.New().String(),
+		Name:        "Backend",
+		Description: sql.NullString{String: "Backend Course", Valid: true},
+	}
+
+	courseDB := NewCourseDB(conn)
+	err = courseDB.CreateCourseAndCategory(ctx, categoryArgs, courseArgs)
+	if err != nil {
+		panic(err)
+	}
+
 	// queries.CreateCategory(ctx, db.CreateCategoryParams{
 	// 	ID:          uuid.New().String(),
 	// 	Name:        "Backend with Go",
